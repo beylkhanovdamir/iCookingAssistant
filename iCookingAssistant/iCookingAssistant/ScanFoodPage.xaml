@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:iCookingAssistant"
+             xmlns:viewModels="clr-namespace:iCookingAssistant.ViewModels;assembly=iCookingAssistant"
+             x:Class="iCookingAssistant.ScanFoodPage">
+	<ContentPage.BindingContext>
+		<viewModels:ScanFoodPageViewModel/>
+	</ContentPage.BindingContext>
+    <StackLayout>
+	    <Grid>
+		    <Grid.RowDefinitions>
+			    <RowDefinition Height="*"/>
+			    <RowDefinition Height="Auto"/>
+			    <RowDefinition Height="*"/>
+		    </Grid.RowDefinitions>
+		    <Button Text="Scan Food"
+	            VerticalOptions="Center" HorizontalOptions="Center" 
+	            FontSize="Large" IsEnabled="{Binding CanTakePhoto}"
+	            Command="{Binding TakePhotoCommand}"/>
+			<ListView ItemsSource="{Binding PredictedFoodObjects}" Grid.Row="1"></ListView>
+			</Grid>
+    </StackLayout>
+
+</ContentPage>
