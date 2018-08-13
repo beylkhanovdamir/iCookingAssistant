@@ -3,23 +3,33 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:iCookingAssistant"
              xmlns:viewModels="clr-namespace:iCookingAssistant.ViewModels;assembly=iCookingAssistant"
-             x:Class="iCookingAssistant.ScanFoodPage">
+             xmlns:helpers="clr-namespace:iCookingAssistant.Helpers;assembly=iCookingAssistant"
+             xmlns:ios="clr-namespace:Xamarin.Forms.PlatformConfiguration.iOSSpecific;assembly=Xamarin.Forms.Core"
+             x:Class="iCookingAssistant.ScanFoodPage" Title="Scan Food">
+	<ContentPage.Resources>
+		<ResourceDictionary>
+			<helpers:InverseBoolConverter x:Key="InverseBoolConverter"/>
+		</ResourceDictionary>
+	</ContentPage.Resources>
 	<ContentPage.BindingContext>
 		<viewModels:ScanFoodPageViewModel/>
 	</ContentPage.BindingContext>
-    <StackLayout>
-	    <Grid>
-		    <Grid.RowDefinitions>
-			    <RowDefinition Height="*"/>
-			    <RowDefinition Height="Auto"/>
-			    <RowDefinition Height="*"/>
-		    </Grid.RowDefinitions>
-		    <Button Text="Scan Food"
-	            VerticalOptions="Center" HorizontalOptions="Center" 
-	            FontSize="Large" IsEnabled="{Binding CanTakePhoto}"
-	            Command="{Binding TakePhotoCommand}"/>
-			<ListView ItemsSource="{Binding PredictedFoodObjects}" Grid.Row="1"></ListView>
-			</Grid>
-    </StackLayout>
+	<FlexLayout Direction="Column" AlignItems="Center" JustifyContent="SpaceEvenly">
+		<Label Text="Food Ingredients" IsVisible="{Binding ShowRecognizedIngredients}"></Label>
 
+		<ListView ios:ListView.SeparatorStyle="FullWidth" ItemsSource="{Binding PredictedFoodIngredients}" IsVisible="{Binding ShowRecognizedIngredients}">
+			<ListView.ItemTemplate>
+				<DataTemplate>
+					<TextCell Text="{Binding .}" TextColor="DimGray" ></TextCell>
+				</DataTemplate>
+			</ListView.ItemTemplate>
+		</ListView>
+
+		<ActivityIndicator VerticalOptions="Center" IsVisible="{Binding ShowSpinner}" IsRunning="{Binding ShowSpinner}"></ActivityIndicator>
+
+		<Button Text="Scan Food" VerticalOptions="Center"
+		        FontSize="Large" IsVisible="{Binding CanTakePhoto}" IsEnabled="{Binding ApiKeysAreValid}"
+		        Command="{Binding TakePhotoCommand}"/>
+
+	</FlexLayout>
 </ContentPage>

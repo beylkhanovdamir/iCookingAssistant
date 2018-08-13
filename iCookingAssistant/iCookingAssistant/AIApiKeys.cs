@@ -4,10 +4,10 @@ using System.Text;
 
 namespace iCookingAssistant
 {
-    public static class AIApiKeys
-    {
-	    public static string PredictionKey = "";
-	    public static string TrainingKey = "";
-	    public static Guid GeneralTrainingProjectId = Guid.Parse("");
-    }
+	public static class AIApiKeys
+	{
+		public static string PredictionKey = "";
+		public static string TrainingKey = "";
+		public static string GeneralTrainingProjectId = "";
+	}
 }

@@ -13,7 +13,7 @@ namespace iCookingAssistant
 		{
 			InitializeComponent();
 
-			MainPage = new ScanFoodPage();
+			MainPage = new HomePage();
 
 		}
 

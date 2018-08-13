@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.Cognitive.CustomVision.Prediction;
 using Microsoft.Cognitive.CustomVision.Prediction.Models;
-using Microsoft.Cognitive.CustomVision.Training;
-using Microsoft.Cognitive.CustomVision.Training.Models;
 using Plugin.Media;
 using Plugin.Media.Abstractions;
+using Xamarin.Essentials;
 using Xamarin.Forms;
 
 namespace iCookingAssistant.ViewModels
@@ -25,50 +22,126 @@ namespace iCookingAssistant.ViewModels
 		// Commands
 		public ICommand TakePhotoCommand { get; set; }
 		// Other
-		private ObservableCollection<string> _predictedFoodObjects;
-		public ObservableCollection<string> PredictedFoodObjects
+		private ObservableCollection<string> _predictedFoodIngredients;
+		public ObservableCollection<string> PredictedFoodIngredients
 		{
-			get => _predictedFoodObjects;
-			set => Set(ref _predictedFoodObjects, value);
+			get => _predictedFoodIngredients;
+			set => Set(ref _predictedFoodIngredients, value);
 		}
+
+		private bool _canTakePhoto = true;
+		public bool CanTakePhoto
+		{
+			get => _canTakePhoto;
+			set
+			{
+				if (Set(ref _canTakePhoto, value))
+					RaisePropertyChanged(nameof(ShowSpinner));
+			}
+		}
+
+		private bool _showRecognizedIngredients;
+		public bool ShowRecognizedIngredients
+		{
+			get => _showRecognizedIngredients;
+			set
+			{
+				if (Set(ref _showRecognizedIngredients, value))
+					RaisePropertyChanged(nameof(ShowRecognizedIngredients));
+			}
+		}
+
+		private bool _apiKeysAreValid;
+		public bool ApiKeysAreValid
+		{
+			get => _apiKeysAreValid;
+			set
+			{
+				if (Set(ref _apiKeysAreValid, value))
+					RaisePropertyChanged(nameof(ApiKeysAreValid));
+			}
+		}
+
+
+		public bool ShowSpinner => !CanTakePhoto;
 
 		public ScanFoodPageViewModel()
 		{
-			_predictionEndpoint = new PredictionEndpoint() { ApiKey = AIApiKeys.PredictionKey };
-			TakePhotoCommand = new Command(async () => await TakePhoto());
+			ApiKeysAreValid = !string.IsNullOrWhiteSpace(AIApiKeys.PredictionKey);
+			if (ApiKeysAreValid)
+			{
+				_predictionEndpoint = new PredictionEndpoint() { ApiKey = AIApiKeys.PredictionKey };
+			}
+			else
+			{
+				Task.Run(async () => await SpeakMessage("Seems you are not authorized...Please check your Settings"));//Чувак ты не авторизован. Запили мне мыло уже =)
+			}
+			TakePhotoCommand = new Command(async () => await TakePhoto(), () => ApiKeysAreValid);
+		}
+
+		public async Task SpeakMessage(string message)
+		{
+			var locales = await TextToSpeech.GetLocalesAsync();
+
+			var locale = locales.FirstOrDefault(x => x.Language == "eng");// rus eng.. TODO: ref #7
+
+			var settings = new SpeakSettings()
+			{
+				Volume = .75F,
+				Pitch = 1.0F,
+				Locale = locale
+			};
+
+			await TextToSpeech.SpeakAsync(message, settings);
 		}
 
 		private async Task TakePhoto()
 		{
+			CanTakePhoto = false;
 			var options = new StoreCameraMediaOptions { PhotoSize = PhotoSize.Medium };
 			var file = await CrossMedia.Current.TakePhotoAsync(options);
 
-			var result = RecognizeFoodObjects(file)
-				.Where(p => p.Probability > ProbabilityThreshold)
-				.Select(x => new { Name = x.Tag, Precision = x.Probability })
-				.GroupBy(x => x.Name)
-				.Select(g => g.First().Name)
-				.ToList();
+			var result = await RecognizeFoodIngredients(file);
 
-			PredictedFoodObjects = new ObservableCollection<string>(result);
+			ShowRecognizedIngredients = result.Count > 0;
 
+			if (ShowRecognizedIngredients)
+			{
+				PredictedFoodIngredients = new ObservableCollection<string>(result
+						.Where(p => p.Probability > ProbabilityThreshold)
+						.Select(x => new { Name = x.Tag, Precision = x.Probability })
+						.GroupBy(x => x.Name)
+						.Select(g => g.First().Name)
+						.ToList()
+					);
+			}
+			else
+			{
+				await SpeakMessage("Sorry, but I don't see anything which can be cooked...Please try again");
+			}
+
+			CanTakePhoto = true;
 		}
 
-		private IList<ImageTagPredictionModel> RecognizeFoodObjects(MediaFile file)
+		private async Task<IList<ImageTagPredictionModel>> RecognizeFoodIngredients(MediaFile file)
 		{
 			var result = new List<ImageTagPredictionModel>();
-			using (var stream = file.GetStream())
+			try
 			{
-				try
+				result = await Task.Factory.StartNew(() =>
 				{
-					result = _predictionEndpoint.PredictImage(AIApiKeys.GeneralTrainingProjectId, stream).Predictions.ToList();
-				}
-				catch (Exception e)
-				{
-					Debug.WriteLine(e);
-				}
-				return result;
+					using (var stream = file.GetStream())
+					{
+						return _predictionEndpoint.PredictImage(Guid.Parse(AIApiKeys.GeneralTrainingProjectId), stream).Predictions.ToList();
+					}
+				});
 			}
+			catch (Exception e)
+			{
+				await SpeakMessage("Sorry, but I don't know what that is...Please try again");
+			}
+
+			return result;
 		}
 
 	}
