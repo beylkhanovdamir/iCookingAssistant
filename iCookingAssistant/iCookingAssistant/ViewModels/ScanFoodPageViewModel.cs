@@ -21,6 +21,7 @@ namespace iCookingAssistant.ViewModels
 		private const double ProbabilityThreshold = 0.8;
 		// Commands
 		public ICommand TakePhotoCommand { get; set; }
+		public ICommand RemoveIngredientCommand { get; set; }
 		// Other
 		private ObservableCollection<string> _predictedFoodIngredients;
 		public ObservableCollection<string> PredictedFoodIngredients
@@ -77,6 +78,13 @@ namespace iCookingAssistant.ViewModels
 				Task.Run(async () => await SpeakMessage("Seems you are not authorized...Please check your Settings"));//Чувак ты не авторизован. Запили мне мыло уже =)
 			}
 			TakePhotoCommand = new Command(async () => await TakePhoto(), () => ApiKeysAreValid);
+			RemoveIngredientCommand = new Command<string>(RemoveIngredient);
+		}
+
+		private void RemoveIngredient(string ingredientName)
+		{
+			PredictedFoodIngredients.Remove(ingredientName);
+			ShowRecognizedIngredients = PredictedFoodIngredients.Any();
 		}
 
 		public async Task SpeakMessage(string message)
@@ -103,24 +111,24 @@ namespace iCookingAssistant.ViewModels
 
 			var result = await RecognizeFoodIngredients(file);
 
-			ShowRecognizedIngredients = result.Count > 0;
+			ShowRecognizedIngredients = result.Count(p => p.Probability > ProbabilityThreshold) > 0;
 
 			if (ShowRecognizedIngredients)
 			{
-				PredictedFoodIngredients = new ObservableCollection<string>(result
-						.Where(p => p.Probability > ProbabilityThreshold)
-						.Select(x => new { Name = x.Tag, Precision = x.Probability })
-						.GroupBy(x => x.Name)
-						.Select(g => g.First().Name)
-						.ToList()
+				PredictedFoodIngredients = new ObservableCollection<string>(result.Where(p => p.Probability > ProbabilityThreshold)
+					.Select(x => new { Name = x.Tag, Precision = x.Probability })
+					.GroupBy(x => x.Name)
+					.Select(g => g.First().Name)
 					);
+				CanTakePhoto = true;
 			}
 			else
 			{
-				await SpeakMessage("Sorry, but I don't see anything which can be cooked...Please try again");
+				await SpeakMessage("Please take a photo bit better.").ContinueWith(task =>
+				{
+					CanTakePhoto = true;
+				});
 			}
-
-			CanTakePhoto = true;
 		}
 
 		private async Task<IList<ImageTagPredictionModel>> RecognizeFoodIngredients(MediaFile file)
@@ -138,7 +146,7 @@ namespace iCookingAssistant.ViewModels
 			}
 			catch (Exception e)
 			{
-				await SpeakMessage("Sorry, but I don't know what that is...Please try again");
+				await SpeakMessage("I don't see anything which can be cooked.");
 			}
 
 			return result;

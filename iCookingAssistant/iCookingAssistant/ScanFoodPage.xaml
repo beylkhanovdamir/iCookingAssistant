@@ -5,22 +5,27 @@
              xmlns:viewModels="clr-namespace:iCookingAssistant.ViewModels;assembly=iCookingAssistant"
              xmlns:helpers="clr-namespace:iCookingAssistant.Helpers;assembly=iCookingAssistant"
              xmlns:ios="clr-namespace:Xamarin.Forms.PlatformConfiguration.iOSSpecific;assembly=Xamarin.Forms.Core"
-             x:Class="iCookingAssistant.ScanFoodPage" Title="Scan Food">
+             x:Class="iCookingAssistant.ScanFoodPage" Title="Scan Food" x:Name="ScanFoodIgredientsPage">
 	<ContentPage.Resources>
 		<ResourceDictionary>
-			<helpers:InverseBoolConverter x:Key="InverseBoolConverter"/>
+			<helpers:CountToBoolenConverter x:Key="CountToBoolenConverter"/>
 		</ResourceDictionary>
 	</ContentPage.Resources>
 	<ContentPage.BindingContext>
 		<viewModels:ScanFoodPageViewModel/>
 	</ContentPage.BindingContext>
 	<FlexLayout Direction="Column" AlignItems="Center" JustifyContent="SpaceEvenly">
-		<Label Text="Food Ingredients" IsVisible="{Binding ShowRecognizedIngredients}"></Label>
+		<Label FontAttributes="Bold" Text="Food Ingredients" IsVisible="{Binding ShowRecognizedIngredients}"></Label>
 
 		<ListView ios:ListView.SeparatorStyle="FullWidth" ItemsSource="{Binding PredictedFoodIngredients}" IsVisible="{Binding ShowRecognizedIngredients}">
 			<ListView.ItemTemplate>
 				<DataTemplate>
-					<TextCell Text="{Binding .}" TextColor="DimGray" ></TextCell>
+					<TextCell Text="{Binding .}" TextColor="DimGray" >
+						<TextCell.ContextActions>
+							<MenuItem Command="{Binding Path=BindingContext.RemoveIngredientCommand, Source={x:Reference Name=ScanFoodIgredientsPage}}" CommandParameter="{Binding .}"
+							          Text="Remove" IsDestructive="True" />
+						</TextCell.ContextActions>
+					</TextCell>
 				</DataTemplate>
 			</ListView.ItemTemplate>
 		</ListView>
