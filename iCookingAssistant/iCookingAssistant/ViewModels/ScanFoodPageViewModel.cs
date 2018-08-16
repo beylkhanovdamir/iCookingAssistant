@@ -120,15 +120,12 @@ namespace iCookingAssistant.ViewModels
 					.GroupBy(x => x.Name)
 					.Select(g => g.First().Name)
 					);
-				CanTakePhoto = true;
 			}
 			else
 			{
-				await SpeakMessage("Please take a photo bit better.").ContinueWith(task =>
-				{
-					CanTakePhoto = true;
-				});
+				await SpeakMessage("Please take a photo bit better.");
 			}
+			CanTakePhoto = true;
 		}
 
 		private async Task<IList<ImageTagPredictionModel>> RecognizeFoodIngredients(MediaFile file)

@@ -14,10 +14,8 @@
 	<ContentPage.BindingContext>
 		<viewModels:ScanFoodPageViewModel/>
 	</ContentPage.BindingContext>
-	<FlexLayout Direction="Column" AlignItems="Center" JustifyContent="SpaceEvenly">
-		<Label FontAttributes="Bold" Text="Food Ingredients" IsVisible="{Binding ShowRecognizedIngredients}"></Label>
-
-		<ListView ios:ListView.SeparatorStyle="FullWidth" ItemsSource="{Binding PredictedFoodIngredients}" IsVisible="{Binding ShowRecognizedIngredients}">
+	<FlexLayout Direction="Column" AlignItems="Center" JustifyContent="SpaceEvenly" Padding="5">
+		<ListView ios:ListView.SeparatorStyle="FullWidth" ItemsSource="{Binding PredictedFoodIngredients}" IsVisible="{Binding ShowRecognizedIngredients}" Header="Your Ingredients:">
 			<ListView.ItemTemplate>
 				<DataTemplate>
 					<TextCell Text="{Binding .}" TextColor="DimGray" >
@@ -32,7 +30,7 @@
 
 		<ActivityIndicator VerticalOptions="Center" IsVisible="{Binding ShowSpinner}" IsRunning="{Binding ShowSpinner}"></ActivityIndicator>
 
-		<Button Text="Scan Food" VerticalOptions="Center"
+		<Button Text="Scan Ingredients" VerticalOptions="Center"
 		        FontSize="Large" IsVisible="{Binding CanTakePhoto}" IsEnabled="{Binding ApiKeysAreValid}"
 		        Command="{Binding TakePhotoCommand}"/>
 
