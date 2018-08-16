@@ -14,8 +14,13 @@
 	<ContentPage.BindingContext>
 		<viewModels:ScanFoodPageViewModel/>
 	</ContentPage.BindingContext>
-	<FlexLayout Direction="Column" AlignItems="Center" JustifyContent="SpaceEvenly" Padding="5">
-		<ListView ios:ListView.SeparatorStyle="FullWidth" ItemsSource="{Binding PredictedFoodIngredients}" IsVisible="{Binding ShowRecognizedIngredients}" Header="Your Ingredients:">
+	<FlexLayout Direction="Column" AlignItems="Center" JustifyContent="SpaceEvenly">
+		<ListView ios:ListView.SeparatorStyle="FullWidth" ItemsSource="{Binding PredictedFoodIngredients}" IsVisible="{Binding ShowRecognizedIngredients}" >
+			<ListView.Header>
+				<Grid Padding="5,0,5,0">
+					<Label FontAttributes="Bold" Text="Your Ingredients:" FontSize="Medium"></Label>
+				</Grid>
+			</ListView.Header>
 			<ListView.ItemTemplate>
 				<DataTemplate>
 					<TextCell Text="{Binding .}" TextColor="DimGray" >
